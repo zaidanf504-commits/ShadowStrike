@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>OPERATION: SHADOW STRIKE</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="game.js" defer></script>
+</head>
+<body>
+  <div id="app-container">
+    <!-- Canvas Utama Gameplay -->
+    <canvas id="game-canvas"></canvas>
+
+    <!-- Efek Vignette Saat Terkena Damage -->
+    <div id="damage-overlay" class="damage-overlay"></div>
+
+    <!-- HUD (Heads-Up Display) -->
+    <div id="hud" class="hud hidden">
+      <!-- Baris Atas HUD -->
+      <div class="hud-top">
+        <!-- Panel Kesehatan Operator -->
+        <div class="hud-panel hud-health-panel">
+          <div class="panel-header">
+            <span class="panel-label">OPERATOR INTEGRITY</span>
+            <span id="health-text" class="panel-value">100 / 100</span>
+          </div>
+          <div class="health-bar-track">
+            <div id="health-bar-damage" class="health-bar-damage"></div>
+            <div id="health-bar-fill" class="health-bar-fill"></div>
+          </div>
+          <div class="operator-status-row">
+            <span id="status-badge" class="status-badge status-nominal">STATUS: NOMINAL</span>
+            <span id="dash-indicator" class="dash-indicator">SECTOR: ALPHA-09</span>
+          </div>
+        </div>
+
+        <!-- Panel Tengah: Wave & Target Eliminasi -->
+        <div class="hud-panel hud-wave-panel">
+          <div class="wave-badge">WAVE <span id="wave-number">1</span> / 5</div>
+          <div class="hostiles-counter">
+            <span class="counter-label">HOSTILES REMAINING</span>
+            <span id="enemies-remaining" class="counter-value">0</span>
+          </div>
+        </div>
+
+        <!-- Panel Kanan: Skor & Tombol Pause -->
+        <div class="hud-panel hud-score-panel">
+          <div class="score-block">
+            <span class="panel-label">TACTICAL SCORE</span>
+            <span id="score-value" class="score-number">000000</span>
+          </div>
+          <button id="btn-hud-pause" class="hud-pause-btn" title="Pause Game (ESC)">
+            II PAUSE
+          </button>
+        </div>
+      </div>
+
+      <!-- Pengumuman Tengah Layar (Wave Cleared / Incoming) -->
+      <div id="wave-banner" class="wave-banner hidden">
+        <div id="wave-banner-title" class="wave-banner-title">WAVE 1</div>
+        <div id="wave-banner-sub" class="wave-banner-sub">INCOMING HOSTILES</div>
+      </div>
+
+      <!-- Indikator Reload di Tengah Bawah Crosshair -->
+      <div id="reload-indicator" class="reload-indicator hidden">
+        <div class="reload-label">RELOADING WEAPON...</div>
+        <div class="reload-bar-track">
+          <div id="reload-progress-fill" class="reload-bar-fill"></div>
+        </div>
+      </div>
+
+      <!-- Peringatan Amunisi -->
+      <div id="ammo-warning" class="ammo-warning hidden">LOW AMMUNITION - PRESS [R] TO RELOAD</div>
+
+      <!-- Baris Bawah HUD: Senjata & Amunisi -->
+      <div class="hud-bottom">
+        <div class="weapon-selector">
+          <div id="slot-1" class="weapon-slot active" data-slot="0">
+            <span class="slot-key">1</span>
+            <div class="slot-icon icon-ar"></div>
+            <span class="slot-name">PULSE AR</span>
+          </div>
+          <div id="slot-2" class="weapon-slot" data-slot="1">
+            <span class="slot-key">2</span>
+            <div class="slot-icon icon-smg"></div>
+            <span class="slot-name">VECTOR SMG</span>
+          </div>
+          <div id="slot-3" class="weapon-slot" data-slot="2">
+            <span class="slot-key">3</span>
+            <div class="slot-icon icon-sg"></div>
+            <span class="slot-name">BREACH SG</span>
+          </div>
+        </div>
+
+        <div class="hud-panel hud-ammo-panel">
+          <div class="weapon-info">
+            <span id="weapon-name" class="weapon-title">M4-VORTEX CARBINE</span>
+            <span id="weapon-desc" class="weapon-subtitle">AUTOMATIC ASSAULT RIFLE</span>
+          </div>
+          <div class="ammo-readout">
+            <span id="ammo-mag" class="ammo-current">30</span>
+            <span class="ammo-divider">/</span>
+            <span id="ammo-reserve" class="ammo-total">180</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Kontrol Sentuh Dasar untuk Perangkat Mobile/Tablet -->
+      <div id="touch-controls" class="touch-controls hidden">
+        <div id="joystick-zone" class="joystick-zone">
+          <div id="joystick-knob" class="joystick-knob"></div>
+        </div>
+        <div class="touch-actions">
+          <button id="btn-touch-reload" class="touch-btn">RELOAD</button>
+          <button id="btn-touch-switch" class="touch-btn">WEAPON</button>
+          <button id="btn-touch-fire" class="touch-btn touch-btn-fire">FIRE</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- LAYAR 1: MAIN MENU -->
+    <section id="screen-main-menu" class="overlay-screen active">
+      <div class="menu-card main-menu-card">
+        <div class="classified-tag">TACTICAL DIRECTIVE // OMEGA-7</div>
+        <h1 class="game-title">OPERATION:<br /><span>SHADOW STRIKE</span></h1>
+        <p class="game-subtitle">
+          Infiltrasi fasilitas riset militer Sektor Alpha-09 yang telah dikuasai unit otonom pemberontak. Bertahan hidup dan eliminasi seluruh gelombang ancaman.
+        </p>
+
+        <div class="menu-buttons">
+          <button id="btn-play" class="btn btn-primary">DEPLOY MISSION</button>
+          <button id="btn-howto" class="btn btn-secondary">HOW TO PLAY</button>
+          <button id="btn-settings" class="btn btn-secondary">SYSTEM SETTINGS</button>
+        </div>
+
+        <div class="menu-footer">
+          <span>STATUS: READY FOR DEPLOYMENT</span>
+          <span>VER 1.0 // OFFLINE TACTICAL BUILD</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- LAYAR 2: HOW TO PLAY -->
+    <section id="screen-howto" class="overlay-screen">
+      <div class="menu-card modal-card">
+        <div class="classified-tag">OPERATOR MANUAL</div>
+        <h2 class="modal-title">TACTICAL CONTROLS &amp; BRIEFING</h2>
+
+        <div class="controls-grid">
+          <div class="control-item">
+            <span class="key-badge">W A S D</span>
+            <div class="control-text">
+              <strong>Pergerakan Taktis</strong>
+              <span>Bergerak ke 8 arah. Gunakan peti logam dan dinding sebagai pelindung dari tembakan.</span>
+            </div>
+          </div>
+          <div class="control-item">
+            <span class="key-badge">MOUSE</span>
+            <div class="control-text">
+              <strong>Sistem Membidik</strong>
+              <span>Arahkan kursor untuk memutar sudut bidikan operator secara presisi.</span>
+            </div>
+          </div>
+          <div class="control-item">
+            <span class="key-badge">KLIK KIRI</span>
+            <div class="control-text">
+              <strong>Menembak Senjata</strong>
+              <span>Klik atau tahan klik kiri untuk menembak sesuai fire rate senjata aktif.</span>
+            </div>
+          </div>
+          <div class="control-item">
+            <span class="key-badge">R</span>
+            <div class="control-text">
+              <strong>Isi Ulang Amunisi (Reload)</strong>
+              <span>Mengisi ulang magasin dari amunisi cadangan. Ambil kotak amunisi dari musuh yang gugur.</span>
+            </div>
+          </div>
+          <div class="control-item">
+            <span class="key-badge">1 / 2 / 3</span>
+            <div class="control-text">
+              <strong>Ganti Senjata</strong>
+              <span>1: Assault Rifle (Seimbang) | 2: SMG (Cepat) | 3: Shotgun (Jarak Dekat).</span>
+            </div>
+          </div>
+          <div class="control-item">
+            <span class="key-badge">ESC</span>
+            <div class="control-text">
+              <strong>Jeda Permainan (Pause)</strong>
+              <span>Menghentikan sementara seluruh simulasi pertempuran.</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="enemy-intel-box">
+          <h3>INTELIJEN ANCAMAN MUSUH</h3>
+          <div class="intel-row">
+            <span class="intel-dot dot-assault"></span>
+            <strong>ASSAULT UNIT:</strong> Kecepatan &amp; ketahanan seimbang, menembakkan proyektil karbin energi.
+          </div>
+          <div class="intel-row">
+            <span class="intel-dot dot-runner"></span>
+            <strong>RUNNER RECON:</strong> Sangat cepat dan agresif, bermanuver mendekati posisi operator.
+          </div>
+          <div class="intel-row">
+            <span class="intel-dot dot-heavy"></span>
+            <strong>HEAVY JUGGERNAUT:</strong> Lapis baja tebal, menembakkan 3 proyektil plasma sekaligus.
+          </div>
+        </div>
+
+        <div class="menu-buttons">
+          <button id="btn-howto-back" class="btn btn-primary">RETURN TO COMMAND</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- LAYAR 3: SETTINGS -->
+    <section id="screen-settings" class="overlay-screen">
+      <div class="menu-card modal-card">
+        <div class="classified-tag">SYSTEM CONFIGURATION</div>
+        <h2 class="modal-title">AUDIO &amp; VISUAL SETTINGS</h2>
+
+        <div class="settings-list">
+          <div class="setting-row">
+            <div class="setting-label">
+              <strong>Master Volume</strong>
+              <span>Volume keseluruhan sistem audio prosedural</span>
+            </div>
+            <div class="setting-control">
+              <input type="range" id="slider-master-vol" min="0" max="100" value="80" />
+              <span id="val-master-vol" class="setting-val">80%</span>
+            </div>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-label">
+              <strong>SFX Volume</strong>
+              <span>Volume tembakan, ledakan, dan indikator antarmuka</span>
+            </div>
+            <div class="setting-control">
+              <input type="range" id="slider-sfx-vol" min="0" max="100" value="85" />
+              <span id="val-sfx-vol" class="setting-val">85%</span>
+            </div>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-label">
+              <strong>Dynamic Camera Look-Ahead (Sensitivity)</strong>
+              <span>Intensitas pergeseran kamera mengikuti arah kursor</span>
+            </div>
+            <div class="setting-control">
+              <input type="range" id="slider-sensitivity" min="0" max="150" value="75" />
+              <span id="val-sensitivity" class="setting-val">75%</span>
+            </div>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-label">
+              <strong>Screen Shake Effect</strong>
+              <span>Getaran kamera saat menembak dan menerima serangan</span>
+            </div>
+            <div class="setting-control">
+              <label class="switch">
+                <input type="checkbox" id="toggle-screenshake" checked />
+                <span class="slider-toggle"></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-label">
+              <strong>Enhanced Visual Effects</strong>
+              <span>Partikel tambahan, selongsong peluru, dan efek glow ekstra</span>
+            </div>
+            <div class="setting-control">
+              <label class="switch">
+                <input type="checkbox" id="toggle-particles" checked />
+                <span class="slider-toggle"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="menu-buttons">
+          <button id="btn-settings-back" class="btn btn-primary">SAVE &amp; RETURN</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- LAYAR 4: PAUSE MENU -->
+    <section id="screen-pause" class="overlay-screen">
+      <div class="menu-card pause-card">
+        <div class="classified-tag">SIMULATION SUSPENDED</div>
+        <h2 class="modal-title">MISSION PAUSED</h2>
+        <p class="modal-desc">Seluruh sistem pertempuran dan pergerakan musuh dihentikan sementara.</p>
+
+        <div class="menu-buttons">
+          <button id="btn-resume" class="btn btn-primary">RESUME OPERATION</button>
+          <button id="btn-pause-settings" class="btn btn-secondary">SETTINGS</button>
+          <button id="btn-pause-restart" class="btn btn-secondary">RESTART MISSION</button>
+          <button id="btn-pause-menu" class="btn btn-danger">ABORT TO MAIN MENU</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- LAYAR 5: GAME OVER -->
+    <section id="screen-gameover" class="overlay-screen">
+      <div class="menu-card outcome-card gameover-card">
+        <div class="classified-tag tag-danger">SIGNAL LOST // OPERATOR DOWN</div>
+        <h2 class="outcome-title text-danger">MISSION FAILED</h2>
+        <p class="modal-desc">Operator mengalami kerusakan kritis sebelum seluruh gelombang ancaman berhasil dinetralisir.</p>
+
+        <div class="stats-grid">
+          <div class="stat-box">
+            <span class="stat-label">FINAL SCORE</span>
+            <span id="go-score" class="stat-value">0</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">HIGHEST WAVE</span>
+            <span id="go-wave" class="stat-value">1 / 5</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">HOSTILES ELIMINATED</span>
+            <span id="go-kills" class="stat-value">0</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">SHOT ACCURACY</span>
+            <span id="go-accuracy" class="stat-value">0%</span>
+          </div>
+        </div>
+
+        <div class="menu-buttons">
+          <button id="btn-go-retry" class="btn btn-primary">REDEPLOY OPERATOR</button>
+          <button id="btn-go-menu" class="btn btn-secondary">MAIN MENU</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- LAYAR 6: VICTORY -->
+    <section id="screen-victory" class="overlay-screen">
+      <div class="menu-card outcome-card victory-card">
+        <div class="classified-tag tag-success">DIRECTIVE ACCOMPLISHED // SECTOR SECURED</div>
+        <h2 class="outcome-title text-accent">OPERATION VICTORY</h2>
+        <p class="modal-desc">Seluruh 5 gelombang pasukan musuh di Sektor Alpha-09 telah berhasil dieliminasi sepenuhnya.</p>
+
+        <div class="stats-grid">
+          <div class="stat-box">
+            <span class="stat-label">FINAL SCORE</span>
+            <span id="vic-score" class="stat-value">0</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">WAVES CLEARED</span>
+            <span id="vic-wave" class="stat-value">5 / 5</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">HOSTILES ELIMINATED</span>
+            <span id="vic-kills" class="stat-value">0</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">SHOT ACCURACY</span>
+            <span id="vic-accuracy" class="stat-value">0%</span>
+          </div>
+        </div>
+
+        <div class="menu-buttons">
+          <button id="btn-vic-playagain" class="btn btn-primary">PLAY AGAIN</button>
+          <button id="btn-vic-menu" class="btn btn-secondary">MAIN MENU</button>
+        </div>
+      </div>
+    </section>
+  </div>
+</body>
+</html>
